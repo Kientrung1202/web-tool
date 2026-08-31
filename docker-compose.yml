@@ -3,10 +3,12 @@ services:
     build:
       context: .
       args:
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:${HOST_PORT:-8088}}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://your-domain.com}
     image: pdf-tools:latest
     restart: unless-stopped
-    ports:
-      - "${HOST_PORT:-8088}:80"
     networks:
       - cloudflare
+
+networks:
+  cloudflare:
+    external: true
