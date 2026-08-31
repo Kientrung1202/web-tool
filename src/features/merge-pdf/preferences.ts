@@ -46,15 +46,15 @@ export function saveMergePreferences(storage: Storage | undefined, preferences: 
   storage.setItem(MERGE_PREFERENCES_KEY, JSON.stringify(preferences));
 }
 
-function isOutputMode(value: unknown): value is OutputMode {
+export function isOutputMode(value: unknown): value is OutputMode {
   return value === "single" || value === "multiple";
 }
 
-function isSizeUnit(value: unknown): value is SizeUnit {
+export function isSizeUnit(value: unknown): value is SizeUnit {
   return value === "MB" || value === "GB";
 }
 
-function isValidMaxSize(value: unknown, unit: SizeUnit): value is number {
+export function isValidMaxSize(value: unknown, unit: SizeUnit): value is number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return false;
   }
