@@ -8,6 +8,7 @@ export type ToolDefinition = {
 
 export const TOOLS: ToolDefinition[] = [
   { slug: "merge-pdf", titleKey: "mergeTitle", descriptionKey: "mergeDescription", active: true, icon: "combine" },
+  { slug: "workflow-builder", titleKey: "workflowTitle", descriptionKey: "workflowDescription", active: true, icon: "combine" },
   { slug: "split-pdf", titleKey: "splitTitle", descriptionKey: "splitDescription", active: false, icon: "split" },
   { slug: "compress-pdf", titleKey: "compressTitle", descriptionKey: "compressDescription", active: true, icon: "archive" },
   { slug: "jpg-to-pdf", titleKey: "jpgToPdfTitle", descriptionKey: "jpgToPdfDescription", active: false, icon: "image" },

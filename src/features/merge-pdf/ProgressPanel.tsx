@@ -74,7 +74,9 @@ function getWarning(locale: Locale, limitLevel: LimitLevel): string | null {
 
 function getStageLabel(locale: Locale, stage: MergeProgress["stage"]): string {
   if (stage === "reading") return t(locale, "progressReading");
+  if (stage === "compressing") return t(locale, "progressCompressing");
   if (stage === "building") return t(locale, "progressBuilding");
+  if (stage === "merging") return t(locale, "progressMerging");
   if (stage === "zipping") return t(locale, "progressZipping");
   if (stage === "done") return t(locale, "readyToDownload");
   return t(locale, "readyForFiles");

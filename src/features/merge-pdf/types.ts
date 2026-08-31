@@ -14,7 +14,7 @@ export type PdfFileItem = {
   file: File;
 };
 
-export type MergeProgressStage = "idle" | "reading" | "building" | "zipping" | "done" | "error";
+export type MergeProgressStage = "idle" | "reading" | "compressing" | "building" | "merging" | "zipping" | "done" | "error";
 
 export type MergeProgress = {
   stage: MergeProgressStage;

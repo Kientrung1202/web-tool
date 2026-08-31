@@ -3,12 +3,13 @@ import { getToolBySlug, TOOLS } from "./tools";
 
 describe("tool metadata", () => {
   it("contains active PDF tools", () => {
-    expect(TOOLS.filter((tool) => tool.active).map((tool) => tool.slug)).toEqual(["merge-pdf", "compress-pdf"]);
+    expect(TOOLS.filter((tool) => tool.active).map((tool) => tool.slug)).toEqual(["merge-pdf", "workflow-builder", "compress-pdf"]);
   });
 
   it("contains the planned coming-soon tools", () => {
     expect(TOOLS.map((tool) => tool.slug)).toEqual([
       "merge-pdf",
+      "workflow-builder",
       "split-pdf",
       "compress-pdf",
       "jpg-to-pdf",
