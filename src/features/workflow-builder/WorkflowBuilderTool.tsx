@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { DownloadSimple, GitBranch, Plus, ShieldCheck, Trash } from "@phosphor-icons/react";
+import { CaretDown, CaretUp, DownloadSimple, GitBranch, Plus, ShieldCheck, Trash } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import { CompressSettings } from "@/features/compress-pdf/CompressSettings";
 import { DEFAULT_COMPRESS_PREFERENCES } from "@/features/compress-pdf/preferences";
@@ -37,6 +37,7 @@ export function WorkflowBuilderTool({ locale }: { locale: Locale }) {
   const [downloads, setDownloads] = useState<DownloadFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isConfigCollapsed, setIsConfigCollapsed] = useState(false);
 
   const totalBytes = useMemo(() => files.reduce((sum, item) => sum + item.file.size, 0), [files]);
   const limitLevel = getLimitLevel(files.length, totalBytes, isMobile);
@@ -186,7 +187,7 @@ export function WorkflowBuilderTool({ locale }: { locale: Locale }) {
   }
 
   return (
-    <section className="grid gap-4 rounded-lg border bg-card/70 p-3 shadow-product lg:grid-cols-[minmax(0,1fr)_22rem] lg:p-4">
+    <section className="grid gap-4 rounded-lg border bg-card/70 p-3 shadow-product lg:grid-cols-[minmax(0,3fr)_minmax(20rem,2fr)] lg:p-4">
       <div className="grid gap-4">
         <FileDropzone locale={locale} onFiles={addFiles} />
         <FileList locale={locale} files={files} onMove={moveFile} onRemove={removeFile} />
@@ -199,8 +200,10 @@ export function WorkflowBuilderTool({ locale }: { locale: Locale }) {
         </div>
         <WorkflowPanel
           locale={locale}
+          isCollapsed={isConfigCollapsed}
           steps={normalizedSteps}
           onAdd={addStep}
+          onToggleCollapsed={() => setIsConfigCollapsed((current) => !current)}
           onRemove={removeStep}
           onUpdate={updateStep}
         />
@@ -243,14 +246,18 @@ export function WorkflowBuilderTool({ locale }: { locale: Locale }) {
 
 function WorkflowPanel({
   locale,
+  isCollapsed,
   steps,
   onAdd,
+  onToggleCollapsed,
   onRemove,
   onUpdate
 }: {
   locale: Locale;
+  isCollapsed: boolean;
   steps: WorkflowStep[];
   onAdd: (id: WorkflowStepId) => void;
+  onToggleCollapsed: () => void;
   onRemove: (id: WorkflowStepId) => void;
   onUpdate: (step: WorkflowStep) => void;
 }) {
@@ -258,11 +265,21 @@ function WorkflowPanel({
 
   return (
     <section className="rounded-lg border bg-card p-5" aria-labelledby="workflow-steps-heading">
-      <div className="mb-4">
-        <h2 id="workflow-steps-heading" className="text-xl font-bold text-card-foreground">
-          {t(locale, "workflowSteps")}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t(locale, "workflowStepsDescription")}</p>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 id="workflow-steps-heading" className="text-xl font-bold text-card-foreground">
+            {t(locale, "workflowSteps")}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t(locale, "workflowStepsDescription")}</p>
+        </div>
+        <button
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border bg-card px-3 text-xs font-semibold text-foreground transition hover:bg-accent hover:text-accent-foreground"
+          type="button"
+          onClick={onToggleCollapsed}
+        >
+          {isCollapsed ? <CaretDown size={16} /> : <CaretUp size={16} />}
+          {isCollapsed ? t(locale, "expandSettings") : t(locale, "collapseSettings")}
+        </button>
       </div>
 
       <div className="grid gap-3">
@@ -284,7 +301,9 @@ function WorkflowPanel({
                 <Trash size={18} />
               </button>
             </div>
-            {step.id === "compress-pdf" ? (
+            {isCollapsed ? (
+              <p className="rounded-md border bg-card px-3 py-2 text-sm font-medium text-muted-foreground">{getStepSummary(locale, step)}</p>
+            ) : step.id === "compress-pdf" ? (
               <CompressSettings locale={locale} preferences={step.settings} onChange={(settings) => onUpdate({ id: "compress-pdf", settings })} />
             ) : (
               <OutputSettings locale={locale} preferences={step.settings} onChange={(settings) => onUpdate({ id: "merge-pdf", settings })} />
@@ -310,6 +329,14 @@ function WorkflowPanel({
       ) : null}
     </section>
   );
+}
+
+function getStepSummary(locale: Locale, step: WorkflowStep): string {
+  if (step.id === "compress-pdf") {
+    return `${t(locale, "compressTitle")} · ${step.settings.mode === "balanced" ? t(locale, "balanced") : t(locale, "smallestFile")}`;
+  }
+
+  return `${t(locale, "mergeTitle")} · ${step.settings.outputMode === "single" ? t(locale, "singlePdf") : t(locale, "multiplePdfs")}`;
 }
 
 function InvalidWorkflowGuidance({ locale, steps }: { locale: Locale; steps: WorkflowStep[] }) {

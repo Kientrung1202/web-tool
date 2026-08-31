@@ -3,8 +3,16 @@ import { expect, test } from "@playwright/test";
 test("English directory shows active and coming soon tools", async ({ page }) => {
   await page.goto("/en");
   await expect(page.getByRole("heading", { name: "Free PDF Tools" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Compress PDF/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /Merge PDF Files/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Workflow Builder" })).toBeVisible();
   await expect(page.getByText("Coming soon").first()).toBeVisible();
+});
+
+test("Root route opens the Vietnamese directory", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/vi$/);
+  await expect(page.getByRole("heading", { name: "Công cụ PDF miễn phí" })).toBeVisible();
 });
 
 test("Vietnamese merge route renders Vietnamese copy", async ({ page }) => {
@@ -24,8 +32,8 @@ test("merge page keeps the simple no-preview file flow", async ({ page }) => {
   await expect(page.locator("canvas")).toHaveCount(0);
 });
 
-test("coming soon tool page is disabled", async ({ page }) => {
+test("compress page is active", async ({ page }) => {
   await page.goto("/en/compress-pdf");
-  await expect(page.getByText("Coming soon")).toBeVisible();
-  await expect(page.getByRole("button", { name: /choose/i })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Compress PDF" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Choose PDF files" })).toBeVisible();
 });
