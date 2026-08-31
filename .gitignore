@@ -1,0 +1,15 @@
+.DS_Store
+._*
+**/._*
+.env
+.env.*
+!.env.template
+
+node_modules/
+.next/
+out/
+test-results/
+playwright-report/
+coverage/
+docs/superpowers/
+tsconfig.tsbuildinfo

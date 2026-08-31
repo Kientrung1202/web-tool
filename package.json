@@ -1,0 +1,41 @@
+{
+  "name": "pdf-tools",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "clean:appledouble": "node scripts/clean-appledouble.mjs",
+    "docker:build": "npm run clean:appledouble && COPYFILE_DISABLE=1 docker compose build",
+    "docker:up": "npm run clean:appledouble && COPYFILE_DISABLE=1 docker compose up -d --build",
+    "docker:down": "docker compose down"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "fflate": "^0.8.2",
+    "next": "^15.5.0",
+    "pdf-lib": "^1.17.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.0",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/jest-dom": "^6.6.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "jsdom": "^26.1.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}
