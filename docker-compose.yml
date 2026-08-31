@@ -8,3 +8,5 @@ services:
     restart: unless-stopped
     ports:
       - "${HOST_PORT:-8088}:80"
+    networks:
+      - cloudflare
