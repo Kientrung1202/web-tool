@@ -9,7 +9,7 @@ export type ToolDefinition = {
 export const TOOLS: ToolDefinition[] = [
   { slug: "merge-pdf", titleKey: "mergeTitle", descriptionKey: "mergeDescription", active: true, icon: "combine" },
   { slug: "split-pdf", titleKey: "splitTitle", descriptionKey: "splitDescription", active: false, icon: "split" },
-  { slug: "compress-pdf", titleKey: "compressTitle", descriptionKey: "compressDescription", active: false, icon: "archive" },
+  { slug: "compress-pdf", titleKey: "compressTitle", descriptionKey: "compressDescription", active: true, icon: "archive" },
   { slug: "jpg-to-pdf", titleKey: "jpgToPdfTitle", descriptionKey: "jpgToPdfDescription", active: false, icon: "image" },
   { slug: "pdf-to-jpg", titleKey: "pdfToJpgTitle", descriptionKey: "pdfToJpgDescription", active: false, icon: "file-image" },
   { slug: "rotate-pdf", titleKey: "rotateTitle", descriptionKey: "rotateDescription", active: false, icon: "rotate" }

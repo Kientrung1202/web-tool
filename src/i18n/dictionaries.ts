@@ -18,6 +18,8 @@ export const dictionaries: Record<Locale, Dictionary> = {
     splitDescription: "Extract pages from a PDF file.",
     compressTitle: "Compress PDF",
     compressDescription: "Reduce PDF file size.",
+    compressSeoBody: "Use this free PDF compressor to rewrite PDF files in your browser. Choose a balanced mode or a smaller-file mode without uploading selected PDFs.",
+    compressAboutTitle: "About this PDF compressor",
     jpgToPdfTitle: "JPG to PDF",
     jpgToPdfDescription: "Turn images into a PDF file.",
     pdfToJpgTitle: "PDF to JPG",
@@ -40,6 +42,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
     targetMaxSize: "File size limit per output",
     targetMaxSizeUnit: "Size unit",
     mergeButton: "Merge PDF",
+    compressButton: "Compress PDF",
     removeFile: "Remove file",
     moveUp: "Move up",
     moveDown: "Move down",
@@ -65,10 +68,16 @@ export const dictionaries: Record<Locale, Dictionary> = {
     clearFiles: "Clear files",
     totalSize: "Total size",
     outputOptions: "Output options",
+    compressOptions: "Compression options",
+    balanced: "Balanced",
+    balancedDescription: "Keeps quality closer to the original with modest size savings.",
+    smallestFile: "Smallest File",
+    smallestDescription: "Uses a more aggressive rewrite for smaller files when possible.",
     outputSummary: "Summary",
     emptyList: "Your selected PDFs will appear here.",
     maxSizeHelp: "Each output PDF will stay under this limit when possible.",
-    processingFailed: "Processing failed. Try fewer files or use a desktop browser."
+    processingFailed: "Processing failed. Try fewer files or use a desktop browser.",
+    noFilesSelectedForCompress: "Choose at least one PDF file to compress."
   },
   vi: {
     siteName: "Công cụ PDF miễn phí",
@@ -85,6 +94,8 @@ export const dictionaries: Record<Locale, Dictionary> = {
     splitDescription: "Trích xuất trang từ file PDF.",
     compressTitle: "Nén PDF",
     compressDescription: "Giảm dung lượng file PDF.",
+    compressSeoBody: "Dùng công cụ nén PDF miễn phí này để ghi lại file PDF ngay trong trình duyệt. Chọn chế độ cân bằng hoặc chế độ file nhỏ hơn mà không tải PDF lên.",
+    compressAboutTitle: "Về công cụ nén PDF",
     jpgToPdfTitle: "JPG sang PDF",
     jpgToPdfDescription: "Chuyển ảnh thành file PDF.",
     pdfToJpgTitle: "PDF sang JPG",
@@ -107,6 +118,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
     targetMaxSize: "Dung lượng giới hạn mỗi file",
     targetMaxSizeUnit: "Đơn vị dung lượng",
     mergeButton: "Ghép PDF",
+    compressButton: "Nén PDF",
     removeFile: "Xóa file",
     moveUp: "Chuyển lên",
     moveDown: "Chuyển xuống",
@@ -132,10 +144,16 @@ export const dictionaries: Record<Locale, Dictionary> = {
     clearFiles: "Xóa danh sách",
     totalSize: "Tổng dung lượng",
     outputOptions: "Tùy chọn đầu ra",
+    compressOptions: "Tùy chọn nén",
+    balanced: "Cân bằng",
+    balancedDescription: "Giữ chất lượng gần bản gốc hơn với mức giảm dung lượng vừa phải.",
+    smallestFile: "File nhỏ nhất",
+    smallestDescription: "Ghi lại PDF mạnh hơn để tạo file nhỏ hơn khi có thể.",
     outputSummary: "Tóm tắt",
     emptyList: "PDF đã chọn sẽ xuất hiện ở đây.",
     maxSizeHelp: "Mỗi file PDF đầu ra sẽ nhỏ hơn giới hạn này khi có thể.",
-    processingFailed: "Xử lý thất bại. Hãy thử ít file hơn hoặc dùng trình duyệt trên máy tính."
+    processingFailed: "Xử lý thất bại. Hãy thử ít file hơn hoặc dùng trình duyệt trên máy tính.",
+    noFilesSelectedForCompress: "Hãy chọn ít nhất một file PDF để nén."
   }
 };
 
