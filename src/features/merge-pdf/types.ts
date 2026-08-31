@@ -1,10 +1,12 @@
 export type OutputMode = "single" | "multiple";
+export type SizeUnit = "MB" | "GB";
 
 export type LimitLevel = "none" | "soft" | "strong" | "hard";
 
 export type MergePreferences = {
   outputMode: OutputMode;
-  maxSizeMb: number;
+  maxSizeValue: number;
+  maxSizeUnit: SizeUnit;
 };
 
 export type PdfFileItem = {

@@ -3,7 +3,8 @@
 import { FilePdf, Files, Package } from "@phosphor-icons/react";
 import type { Locale } from "@/i18n/locales";
 import { t } from "@/i18n/dictionaries";
-import type { MergePreferences, OutputMode } from "./types";
+import { clampOutputSize, getMaxOutputSize, getMinOutputSize, MB_PER_GB } from "./preferences";
+import type { MergePreferences, OutputMode, SizeUnit } from "./types";
 
 type OutputSettingsProps = {
   locale: Locale;
@@ -19,8 +20,21 @@ export function OutputSettings({ locale, preferences, onChange }: OutputSettings
   function setMaxSize(value: string) {
     const next = Number(value);
     if (Number.isFinite(next)) {
-      onChange({ ...preferences, maxSizeMb: Math.min(500, Math.max(1, next)) });
+      onChange({ ...preferences, maxSizeValue: clampOutputSize(next, preferences.maxSizeUnit) });
     }
+  }
+
+  function setMaxSizeUnit(maxSizeUnit: SizeUnit) {
+    const maxSizeValue =
+      maxSizeUnit === preferences.maxSizeUnit
+        ? preferences.maxSizeValue
+        : convertSizeValue(preferences.maxSizeValue, preferences.maxSizeUnit, maxSizeUnit);
+
+    onChange({
+      ...preferences,
+      maxSizeUnit,
+      maxSizeValue: clampOutputSize(maxSizeValue, maxSizeUnit)
+    });
   }
 
   return (
@@ -64,18 +78,26 @@ export function OutputSettings({ locale, preferences, onChange }: OutputSettings
               <Files size={18} />
               {t(locale, "targetMaxSize")}
             </span>
-            <div className="grid grid-cols-[minmax(0,1fr)_3.5rem] overflow-hidden rounded-md border bg-card">
+            <div className="grid grid-cols-[minmax(0,1fr)_4.5rem] overflow-hidden rounded-md border bg-card">
               <input
                 className="h-10 w-full bg-transparent px-3 text-sm outline-none focus:ring-2 focus:ring-ring/40"
-                inputMode="numeric"
-                min={1}
-                max={500}
-                step={1}
+                inputMode="decimal"
+                min={getMinOutputSize(preferences.maxSizeUnit)}
+                max={getMaxOutputSize(preferences.maxSizeUnit)}
+                step={preferences.maxSizeUnit === "GB" ? 0.01 : 1}
                 type="number"
-                value={preferences.maxSizeMb}
+                value={preferences.maxSizeValue}
                 onChange={(event) => setMaxSize(event.target.value)}
               />
-              <span className="grid place-items-center border-l text-sm font-semibold text-muted-foreground">{t(locale, "targetMaxSizeUnit")}</span>
+              <select
+                aria-label={t(locale, "targetMaxSizeUnit")}
+                className="h-10 border-l bg-muted px-2 text-sm font-semibold text-muted-foreground outline-none focus:ring-2 focus:ring-ring/40"
+                value={preferences.maxSizeUnit}
+                onChange={(event) => setMaxSizeUnit(event.target.value as SizeUnit)}
+              >
+                <option value="MB">MB</option>
+                <option value="GB">GB</option>
+              </select>
             </div>
           </label>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{t(locale, "maxSizeHelp")}</p>
@@ -83,4 +105,16 @@ export function OutputSettings({ locale, preferences, onChange }: OutputSettings
       ) : null}
     </section>
   );
+}
+
+function convertSizeValue(value: number, fromUnit: SizeUnit, toUnit: SizeUnit): number {
+  if (fromUnit === toUnit) {
+    return value;
+  }
+
+  if (fromUnit === "MB") {
+    return Number((value / MB_PER_GB).toFixed(2));
+  }
+
+  return Math.round(value * MB_PER_GB);
 }

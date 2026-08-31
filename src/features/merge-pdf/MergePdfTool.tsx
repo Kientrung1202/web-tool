@@ -6,7 +6,7 @@ import type { Locale } from "@/i18n/locales";
 import { t } from "@/i18n/dictionaries";
 import { formatBytes } from "@/lib/format";
 import { getLimitLevel } from "./limits";
-import { DEFAULT_PREFERENCES, loadMergePreferences, saveMergePreferences } from "./preferences";
+import { DEFAULT_PREFERENCES, loadMergePreferences, saveMergePreferences, toMaxSizeMb } from "./preferences";
 import { runMergeWorker } from "./worker-client";
 import { FileDropzone } from "./FileDropzone";
 import { FileList } from "./FileList";
@@ -129,7 +129,7 @@ export function MergePdfTool({ locale }: { locale: Locale }) {
       const result = await runMergeWorker({
         files: workerFiles,
         outputMode: preferences.outputMode,
-        maxSizeMb: preferences.maxSizeMb,
+        maxSizeMb: toMaxSizeMb(preferences),
         onProgress: setProgress
       });
 

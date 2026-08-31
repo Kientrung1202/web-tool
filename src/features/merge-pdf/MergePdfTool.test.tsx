@@ -39,5 +39,10 @@ describe("MergePdfTool", () => {
     await user.click(screen.getByRole("radio", { name: "Multiple PDFs" }));
 
     expect(screen.getByText("File size limit per output")).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Size unit" })).toHaveValue("MB");
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "Size unit" }), "GB");
+
+    expect(screen.getByRole("combobox", { name: "Size unit" })).toHaveValue("GB");
   });
 });

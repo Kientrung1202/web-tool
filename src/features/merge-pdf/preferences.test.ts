@@ -9,8 +9,14 @@ describe("merge preferences", () => {
 
   it("saves and loads output preferences", () => {
     const storage = new MapStorage();
-    saveMergePreferences(storage, { outputMode: "multiple", maxSizeMb: 4 });
-    expect(loadMergePreferences(storage)).toEqual({ outputMode: "multiple", maxSizeMb: 4 });
+    saveMergePreferences(storage, { outputMode: "multiple", maxSizeValue: 1, maxSizeUnit: "GB" });
+    expect(loadMergePreferences(storage)).toEqual({ outputMode: "multiple", maxSizeValue: 1, maxSizeUnit: "GB" });
+  });
+
+  it("loads older MB-only preferences", () => {
+    const storage = new MapStorage();
+    storage.setItem("merge-pdf-preferences", "{\"outputMode\":\"multiple\",\"maxSizeMb\":4}");
+    expect(loadMergePreferences(storage)).toEqual({ outputMode: "multiple", maxSizeValue: 4, maxSizeUnit: "MB" });
   });
 
   it("ignores invalid persisted values", () => {
