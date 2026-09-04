@@ -3,7 +3,13 @@ import { getDirectoryTools, getToolBySlug, TOOLS } from "./tools";
 
 describe("tool metadata", () => {
   it("contains active PDF tools", () => {
-    expect(TOOLS.filter((tool) => tool.active).map((tool) => tool.slug)).toEqual(["compress-pdf", "merge-pdf", "workflow-builder"]);
+    expect(TOOLS.filter((tool) => tool.active).map((tool) => tool.slug)).toEqual([
+      "compress-pdf",
+      "merge-pdf",
+      "workflow-builder",
+      "word-to-pdf",
+      "pdf-to-word"
+    ]);
   });
 
   it("contains the planned coming-soon tools", () => {
@@ -12,6 +18,8 @@ describe("tool metadata", () => {
       "merge-pdf",
       "workflow-builder",
       "split-pdf",
+      "word-to-pdf",
+      "pdf-to-word",
       "jpg-to-pdf",
       "pdf-to-jpg",
       "rotate-pdf"
@@ -23,6 +31,8 @@ describe("tool metadata", () => {
       "compress-pdf",
       "merge-pdf",
       "split-pdf",
+      "word-to-pdf",
+      "pdf-to-word",
       "jpg-to-pdf",
       "pdf-to-jpg",
       "rotate-pdf"

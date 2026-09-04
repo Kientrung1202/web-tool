@@ -3,12 +3,55 @@ services:
     build:
       context: .
       args:
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://your-domain.com}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://pdf.shining.io.vn}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+        NEXT_PUBLIC_CONVERTER_MAX_FILE_SIZE_MB: ${NEXT_PUBLIC_CONVERTER_MAX_FILE_SIZE_MB:-20}
     image: pdf-tools:latest
     restart: unless-stopped
+    ports:
+      - "${PDF_TOOLS_BIND_ADDRESS:-127.0.0.1}:${PDF_TOOLS_PORT:-8088}:80"
+    environment:
+      CONVERTER_INTERNAL_PROXY_TOKEN: ${CONVERTER_INTERNAL_PROXY_TOKEN}
+      NGINX_CLIENT_MAX_BODY_SIZE: ${NGINX_CLIENT_MAX_BODY_SIZE:-25m}
+      NGINX_PROXY_READ_TIMEOUT: ${NGINX_PROXY_READ_TIMEOUT:-130s}
+    depends_on:
+      - converter-api
     networks:
+      - internal
       - cloudflare
 
+  converter-api:
+    build:
+      context: ./converter-api
+    image: pdf-tools-converter-api:latest
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${CONVERTER_NODE_ENV:-production}
+      CONVERTER_HOST: 0.0.0.0
+      PORT: 3001
+      CONVERTER_MAX_FILE_SIZE_MB: ${CONVERTER_MAX_FILE_SIZE_MB:-20}
+      CONVERTER_MAX_FILES_PER_REQUEST: ${CONVERTER_MAX_FILES_PER_REQUEST:-1}
+      CONVERTER_MAX_PDF_PAGES: ${CONVERTER_MAX_PDF_PAGES:-80}
+      CONVERTER_TIMEOUT_SECONDS: ${CONVERTER_TIMEOUT_SECONDS:-120}
+      CONVERTER_MAX_CONCURRENT_JOBS: ${CONVERTER_MAX_CONCURRENT_JOBS:-2}
+      CONVERTER_QUEUE_MAX_SIZE: ${CONVERTER_QUEUE_MAX_SIZE:-10}
+      CONVERTER_TEMP_TTL_SECONDS: ${CONVERTER_TEMP_TTL_SECONDS:-300}
+      CONVERTER_TEMP_DIR: /var/tmp/converter/jobs
+      CONVERTER_ALLOWED_ORIGINS: ${CONVERTER_ALLOWED_ORIGINS:-https://pdf.shining.io.vn}
+      CONVERTER_INTERNAL_PROXY_TOKEN: ${CONVERTER_INTERNAL_PROXY_TOKEN}
+      CONVERTER_RATE_LIMIT_WINDOW_SECONDS: ${CONVERTER_RATE_LIMIT_WINDOW_SECONDS:-60}
+      CONVERTER_RATE_LIMIT_MAX_REQUESTS: ${CONVERTER_RATE_LIMIT_MAX_REQUESTS:-3}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY}
+    volumes:
+      - ./.converter-tmp:/var/tmp/converter/jobs
+    networks:
+      - internal
+    cpus: "1.0"
+    mem_limit: 1024m
+    pids_limit: 256
+
 networks:
+  internal:
+    internal: true
   cloudflare:
     external: true

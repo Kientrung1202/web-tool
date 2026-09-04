@@ -3,7 +3,7 @@ export type ToolDefinition = {
   titleKey: string;
   descriptionKey: string;
   active: boolean;
-  icon: "combine" | "split" | "archive" | "image" | "file-image" | "rotate";
+  icon: "combine" | "split" | "archive" | "image" | "file-image" | "rotate" | "word" | "pdf";
 };
 
 export const TOOLS: ToolDefinition[] = [
@@ -11,6 +11,8 @@ export const TOOLS: ToolDefinition[] = [
   { slug: "merge-pdf", titleKey: "mergeTitle", descriptionKey: "mergeDescription", active: true, icon: "combine" },
   { slug: "workflow-builder", titleKey: "workflowTitle", descriptionKey: "workflowDescription", active: true, icon: "combine" },
   { slug: "split-pdf", titleKey: "splitTitle", descriptionKey: "splitDescription", active: false, icon: "split" },
+  { slug: "word-to-pdf", titleKey: "wordToPdfTitle", descriptionKey: "wordToPdfDescription", active: true, icon: "word" },
+  { slug: "pdf-to-word", titleKey: "pdfToWordTitle", descriptionKey: "pdfToWordDescription", active: true, icon: "pdf" },
   { slug: "jpg-to-pdf", titleKey: "jpgToPdfTitle", descriptionKey: "jpgToPdfDescription", active: false, icon: "image" },
   { slug: "pdf-to-jpg", titleKey: "pdfToJpgTitle", descriptionKey: "pdfToJpgDescription", active: false, icon: "file-image" },
   { slug: "rotate-pdf", titleKey: "rotateTitle", descriptionKey: "rotateDescription", active: false, icon: "rotate" }

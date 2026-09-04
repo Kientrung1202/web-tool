@@ -1,7 +1,9 @@
 import {
   Archive,
   ArrowsClockwise,
+  FileDoc,
   FileImage,
+  FilePdf,
   Files,
   Image,
   Scissors
@@ -16,5 +18,7 @@ export function ToolIcon({ icon }: { icon: ToolDefinition["icon"] }) {
   if (icon === "archive") return <Archive {...props} />;
   if (icon === "image") return <Image {...props} />;
   if (icon === "file-image") return <FileImage {...props} />;
+  if (icon === "word") return <FileDoc {...props} />;
+  if (icon === "pdf") return <FilePdf {...props} />;
   return <ArrowsClockwise {...props} />;
 }

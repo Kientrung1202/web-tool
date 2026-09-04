@@ -12,5 +12,8 @@ test-results/
 playwright-report/
 coverage/
 docs/superpowers/
+.converter-tmp/
 .worktrees/
+.venv/
+__pycache__/
 tsconfig.tsbuildinfo

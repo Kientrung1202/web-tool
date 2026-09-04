@@ -21,7 +21,7 @@ export default async function CompressPdfPage({ params }: { params: Promise<{ lo
   const safeLocale: Locale = isLocale(locale) ? locale : "en";
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-5 md:py-6">
+    <main className="mx-auto w-full max-w-6xl px-4 pb-32 pt-5 md:pb-36 md:pt-6">
       <section className="mb-4 rounded-lg border bg-card px-4 py-3 shadow-sm md:px-5">
         <nav className="mb-3 flex items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
           <Link className="font-medium transition hover:text-foreground" href={`/${safeLocale}`}>

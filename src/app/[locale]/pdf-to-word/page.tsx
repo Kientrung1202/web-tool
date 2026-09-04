@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AdSlot } from "@/components/AdSlot";
-import { MergePdfTool } from "@/features/merge-pdf/MergePdfTool";
+import { ConvertFileTool } from "@/features/convert-file/ConvertFileTool";
 import { isLocale, LOCALES, type Locale } from "@/i18n/locales";
 import { t } from "@/i18n/dictionaries";
 import { buildMetadata } from "@/lib/seo";
@@ -13,10 +13,10 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const safeLocale: Locale = isLocale(locale) ? locale : "en";
-  return buildMetadata(safeLocale, t(safeLocale, "mergeTitle"), t(safeLocale, "mergeDescription"), "merge-pdf");
+  return buildMetadata(safeLocale, t(safeLocale, "pdfToWordTitle"), t(safeLocale, "pdfToWordDescription"), "pdf-to-word");
 }
 
-export default async function MergePdfPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function PdfToWordPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const safeLocale: Locale = isLocale(locale) ? locale : "en";
 
@@ -28,27 +28,23 @@ export default async function MergePdfPage({ params }: { params: Promise<{ local
             {t(safeLocale, "navTools")}
           </Link>
           <span aria-hidden="true">/</span>
-          <span className="font-medium text-foreground">{t(safeLocale, "mergeTitle")}</span>
+          <span className="font-medium text-foreground">{t(safeLocale, "pdfToWordTitle")}</span>
         </nav>
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-bold leading-tight tracking-normal text-card-foreground md:text-3xl">
-              {t(safeLocale, "mergeTitle")}
-            </h1>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">{t(safeLocale, "mergeDescription")}</p>
-          </div>
-          <span className="inline-flex h-8 w-fit shrink-0 items-center rounded-md border border-primary/20 bg-primary/10 px-3 text-sm font-semibold text-accent-foreground">
-            {t(safeLocale, "filesStayBrowser")}
-          </span>
-        </div>
+        <h1 className="text-2xl font-bold leading-tight tracking-normal text-card-foreground md:text-3xl">{t(safeLocale, "pdfToWordTitle")}</h1>
+        <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">{t(safeLocale, "pdfToWordDescription")}</p>
       </section>
 
-      <MergePdfTool locale={safeLocale} />
+      <ConvertFileTool
+        kind="pdf-to-word"
+        locale={safeLocale}
+        maxFileSizeMb={Number.parseInt(process.env.NEXT_PUBLIC_CONVERTER_MAX_FILE_SIZE_MB ?? "20", 10)}
+        turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
+      />
       <AdSlot label={t(safeLocale, "adReserved")} />
 
       <section className="mt-5 rounded-lg border bg-card p-6 md:p-8">
-        <h2 className="text-2xl font-bold text-card-foreground">{t(safeLocale, "mergeAboutTitle")}</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">{t(safeLocale, "mergeSeoBody")}</p>
+        <h2 className="text-2xl font-bold text-card-foreground">{t(safeLocale, "pdfToWordAboutTitle")}</h2>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">{t(safeLocale, "pdfToWordSeoBody")}</p>
       </section>
     </main>
   );
