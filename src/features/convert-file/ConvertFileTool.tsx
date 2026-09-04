@@ -58,13 +58,13 @@ export function ConvertFileTool({ kind, locale, maxFileSizeMb, turnstileSiteKey 
       return;
     }
 
-    if (nextFile.size > maxBytes) {
-      setFile(null);
-      setError(t(locale, "convertFileTooLarge"));
-      return;
-    }
-
+    // Keep the file in state even if too large, so the file card
+    // (with remove button) still renders and the user can dismiss it.
     setFile(nextFile);
+
+    if (nextFile.size > maxBytes) {
+      setError(t(locale, "convertFileTooLarge"));
+    }
   }
 
   function removeFile() {
@@ -184,13 +184,25 @@ export function ConvertFileTool({ kind, locale, maxFileSizeMb, turnstileSiteKey 
           {kind === "pdf-to-word" ? <p className="mt-3 text-sm leading-6 text-warning-foreground">{t(locale, "pdfToWordBestEffort")}</p> : null}
         </div>
 
-        {error ? <p className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive-foreground">{error}</p> : null}
+        {error ? (
+          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3">
+            <p className="flex-1 text-sm text-destructive-foreground">{error}</p>
+            <button
+              className="grid size-6 flex-shrink-0 place-items-center rounded text-destructive-foreground/70 transition hover:bg-destructive/20 hover:text-destructive-foreground"
+              type="button"
+              onClick={() => setError("")}
+              aria-label="Dismiss error"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        ) : null}
         {status ? <p className="rounded-md border border-primary/20 bg-primary/10 p-3 text-sm text-accent-foreground">{status}</p> : null}
 
         <button
           className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px disabled:opacity-50"
           type="button"
-          disabled={!file || isConverting}
+          disabled={!file || isConverting || !!error}
           onClick={submit}
         >
           {isConverting ? t(locale, "convertConverting") : t(locale, "convertButton")}
