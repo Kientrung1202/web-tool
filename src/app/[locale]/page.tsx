@@ -6,6 +6,7 @@ import { t } from "@/i18n/dictionaries";
 import { TOOLS } from "@/lib/tools";
 import { buildMetadata } from "@/lib/seo";
 import { Badge } from "@/components/ui/badge";
+import { AdBannerResponsive } from "@/components/ads/AdBanner";
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -71,6 +72,9 @@ export default async function DirectoryPage({ params }: { params: Promise<{ loca
           </div>
         )}
       </section>
+
+      {/* Ad banner — 728×90 desktop / 320×50 mobile */}
+      <AdBannerResponsive className="mt-10" />
 
     </main>
   );

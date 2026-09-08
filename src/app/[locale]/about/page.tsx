@@ -7,6 +7,7 @@ import { buildMetadata } from "@/lib/seo";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AdNativeBanner } from "@/components/ads/AdNativeBanner";
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -95,6 +96,8 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
           </Button>
         </div>
       </article>
+
+      <AdNativeBanner className="mt-8" />
     </main>
   );
 }

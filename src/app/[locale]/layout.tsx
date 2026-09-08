@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AdSocialBar } from "@/components/ads/AdSocialBar";
 import { isLocale, LOCALES, type Locale } from "@/i18n/locales";
 
 export function generateStaticParams() {
@@ -26,6 +27,7 @@ export default async function LocaleLayout({
       <SiteHeader locale={locale as Locale} />
       {children}
       <SiteFooter locale={locale as Locale} />
+      <AdSocialBar />
     </ThemeProvider>
   );
 }
