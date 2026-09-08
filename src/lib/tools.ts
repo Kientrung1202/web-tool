@@ -4,12 +4,14 @@ export type ToolDefinition = {
   descriptionKey: string;
   active: boolean;
   icon: "combine" | "split" | "archive" | "image" | "file-image" | "rotate" | "word" | "pdf";
+  /** Optional tag key for special categorization (e.g. "advanced") */
+  tagKey?: string;
 };
 
 export const TOOLS: ToolDefinition[] = [
   { slug: "compress-pdf", titleKey: "compressTitle", descriptionKey: "compressDescription", active: true, icon: "archive" },
   { slug: "merge-pdf", titleKey: "mergeTitle", descriptionKey: "mergeDescription", active: true, icon: "combine" },
-  { slug: "workflow-builder", titleKey: "workflowTitle", descriptionKey: "workflowDescription", active: true, icon: "combine" },
+  { slug: "workflow-builder", titleKey: "workflowTitle", descriptionKey: "workflowDescription", active: true, icon: "combine", tagKey: "tagAdvanced" },
   { slug: "split-pdf", titleKey: "splitTitle", descriptionKey: "splitDescription", active: false, icon: "split" },
   { slug: "word-to-pdf", titleKey: "wordToPdfTitle", descriptionKey: "wordToPdfDescription", active: true, icon: "word" },
   { slug: "pdf-to-word", titleKey: "pdfToWordTitle", descriptionKey: "pdfToWordDescription", active: true, icon: "pdf" },

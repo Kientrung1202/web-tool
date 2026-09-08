@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { isLocale, LOCALES, type Locale } from "@/i18n/locales";
 
 export function generateStaticParams() {
@@ -21,10 +22,10 @@ export default async function LocaleLayout({
   if (!isLocale(locale)) notFound();
 
   return (
-    <>
+    <ThemeProvider>
       <SiteHeader locale={locale as Locale} />
       {children}
       <SiteFooter locale={locale as Locale} />
-    </>
+    </ThemeProvider>
   );
 }

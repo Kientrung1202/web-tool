@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { AdSlot } from "@/components/AdSlot";
 import { ToolCard } from "@/components/ToolCard";
+import { HeroSearch } from "@/components/HeroSearch";
 import { isLocale, LOCALES, type Locale } from "@/i18n/locales";
 import { t } from "@/i18n/dictionaries";
-import { getDirectoryTools, getToolBySlug } from "@/lib/tools";
+import { TOOLS } from "@/lib/tools";
 import { buildMetadata } from "@/lib/seo";
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
@@ -20,41 +20,58 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function DirectoryPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const safeLocale: Locale = isLocale(locale) ? locale : "en";
-  const workflowBuilder = getToolBySlug("workflow-builder");
+
+  const activeTools = TOOLS.filter((tool) => tool.active);
+  const comingSoonTools = TOOLS.filter((tool) => !tool.active);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-32 pt-8 md:pb-36 md:pt-10">
-      <section className="mb-6 rounded-lg border bg-card p-6 shadow-product md:p-10">
-        <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-4">
-              <p className="inline-flex h-12 min-w-16 items-center justify-center rounded-md bg-primary px-4 text-base font-bold text-primary-foreground">
-                PDF
-              </p>
-              <h1 className="max-w-3xl text-4xl font-bold leading-tight tracking-normal text-card-foreground md:text-6xl">
-                {t(safeLocale, "directoryTitle")}
-              </h1>
-            </div>
-          <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">{t(safeLocale, "directoryIntro")}</p>
-          </div>
-          {workflowBuilder ? (
-            <Link
-              className="inline-flex h-10 w-fit shrink-0 items-center justify-center rounded-md border border-secondary/80 bg-secondary px-4 text-sm font-semibold text-secondary-foreground shadow-sm transition hover:bg-secondary/85"
-              href={`/${safeLocale}/${workflowBuilder.slug}`}
-            >
-              {t(safeLocale, workflowBuilder.titleKey)}
-            </Link>
-          ) : null}
+    <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-10 md:pb-32 md:pt-16">
+      {/* ── Hero ── */}
+      <section className="mb-16 text-center md:mb-20">
+        <h1 className="mx-auto max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight text-foreground md:text-6xl">
+          {t(safeLocale, "heroHeadline")}
+        </h1>
+        <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+          {t(safeLocale, "heroSubline")}
+        </p>
+
+        {/* Trust chips */}
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+          <Badge variant="secondary" className="gap-1.5 rounded-full px-3 py-1 text-xs font-medium">
+            <span className="inline-block size-1.5 rounded-full bg-secondary-foreground/80" aria-hidden="true" />
+            {t(safeLocale, "privacyChip")}
+          </Badge>
+          <Badge variant="outline" className="rounded-full px-3 py-1 text-xs font-medium">
+            {t(safeLocale, "noAccountChip")}
+          </Badge>
+          <Badge variant="outline" className="rounded-full px-3 py-1 text-xs font-medium">
+            {t(safeLocale, "freeChip")}
+          </Badge>
         </div>
+
+        {/* Search trigger — replaces CTA button */}
+        <HeroSearch locale={safeLocale} />
       </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label={t(safeLocale, "directoryTitle")}>
-        {getDirectoryTools().map((tool) => (
-          <ToolCard key={tool.slug} tool={tool} locale={safeLocale} />
-        ))}
+      {/* ── Bento Tool Directory ── */}
+      <section aria-label={t(safeLocale, "directoryTitle")}>
+        {/* Active tools — uniform 3-col grid, equal height */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {activeTools.map((tool) => (
+            <ToolCard key={tool.slug} tool={tool} locale={safeLocale} variant="featured" />
+          ))}
+        </div>
+
+        {/* Coming soon tools — 4-col, muted */}
+        {comingSoonTools.length > 0 && (
+          <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+            {comingSoonTools.map((tool) => (
+              <ToolCard key={tool.slug} tool={tool} locale={safeLocale} variant="muted" />
+            ))}
+          </div>
+        )}
       </section>
 
-      <AdSlot label={t(safeLocale, "adReserved")} />
     </main>
   );
 }
