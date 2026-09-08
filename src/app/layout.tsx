@@ -9,14 +9,38 @@ const dmSans = DM_Sans({
   variable: "--font-dm-sans"
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
 export const metadata: Metadata = {
-  title: "Shining PDF Tools",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Shining PDF Tools",
+    template: "%s — Shining PDF Tools"
+  },
   description: "Free browser-based PDF tools for everyday office tasks.",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/icon.svg", type: "image/svg+xml" }
+    ],
+    apple: { url: "/og-image.jpg", type: "image/jpeg" }
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Shining PDF Tools",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Shining PDF Tools",
+        type: "image/jpeg"
+      }
     ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og-image.jpg"]
   }
 };
 
