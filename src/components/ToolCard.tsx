@@ -33,6 +33,7 @@ export function ToolCard({ tool, locale, variant = "standard" }: Props) {
           "border-border/60 bg-muted/40 opacity-60 hover:opacity-80 hover:border-border"
       )}
       href={buildLocalizedPath(locale, tool.slug)}
+      prefetch={false}
       aria-label={effectiveVariant === "muted" ? `${title} — ${t(locale, "comingSoon")}` : title}
     >
       {/* Tag + Icon row */}
