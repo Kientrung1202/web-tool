@@ -46,6 +46,7 @@ services:
       - ./.converter-tmp:/var/tmp/converter/jobs
     networks:
       - internal
+      - converter-egress
     cpus: "1.0"
     mem_limit: 1024m
     pids_limit: 256
@@ -53,5 +54,6 @@ services:
 networks:
   internal:
     internal: true
+  converter-egress:
   cloudflare:
     external: true

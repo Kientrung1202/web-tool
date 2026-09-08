@@ -12,6 +12,11 @@ describe("converter deployment wiring", () => {
     expect(compose).not.toMatch(/converter-api:[\s\S]*\n\s+ports:/);
   });
 
+  it("allows converter-api outbound egress for Turnstile verification", () => {
+    expect(compose).toMatch(/converter-api:[\s\S]*networks:\n\s+- internal\n\s+- converter-egress/);
+    expect(compose).toMatch(/converter-egress:\n(?!\s+internal: true)/);
+  });
+
   it("proxies conversion requests through Nginx with an internal token", () => {
     expect(nginx).toContain("location /api/convert/");
     expect(nginx).toContain("proxy_pass http://converter-api:3001/api/convert/");

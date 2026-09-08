@@ -18,7 +18,7 @@ Expected request path:
 Browser -> Cloudflare -> Tunnel -> pdf-tools Nginx -> converter-api
 ```
 
-`converter-api` is only attached to the internal Docker network and has no published Docker `ports`.
+`converter-api` has no published Docker `ports`. It is attached to the internal Docker network for Nginx proxy traffic and to the `converter-egress` bridge network so it can reach Cloudflare Turnstile Siteverify over outbound HTTPS.
 
 ## Env Files
 
@@ -115,6 +115,8 @@ Set:
 
 The frontend widget alone is not enough. The converter validates `cf-turnstile-response` with Cloudflare Siteverify before conversion.
 
+Because server-side Turnstile validation calls `https://challenges.cloudflare.com/turnstile/v0/siteverify`, `converter-api` must have outbound DNS and HTTPS egress. If the container is only attached to an `internal: true` Docker network, production conversion requests can fail before conversion with an `httpx.ConnectError` like `Temporary failure in name resolution`.
+
 ## WAF Custom Rules
 
 Rule: block wrong methods for conversion endpoints.
@@ -186,7 +188,7 @@ Check that:
 
 - `converter-api` has no public `ports`.
 - `pdf-tools` is attached to both `internal` and `cloudflare` networks.
-- `converter-api` is attached only to `internal`.
+- `converter-api` is attached to `internal` and `converter-egress`.
 - `/api/convert/*` is visible only through `pdf.shining.io.vn`.
 - Cloudflare Security Events show WAF/rate limit actions when tested.
 
