@@ -140,5 +140,5 @@ def assert_upload_allowed(
     ext = file_extension.lower()
     if kind == "word-to-pdf" and ext not in WORD_EXTENSIONS:
         raise HTTPException(status_code=422, detail="Unsupported file type")
-    if kind == "pdf-to-word" and ext != ".pdf":
+    if kind in ("pdf-to-word", "compress-pdf") and ext != ".pdf":
         raise HTTPException(status_code=422, detail="Unsupported file type")

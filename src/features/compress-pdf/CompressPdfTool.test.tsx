@@ -6,7 +6,7 @@ import { CompressPdfTool } from "./CompressPdfTool";
 describe("CompressPdfTool", () => {
   it("adds PDF files to the selected list", async () => {
     const user = userEvent.setup();
-    render(<CompressPdfTool locale="en" />);
+    render(<CompressPdfTool locale="en" maxFileSizeMb={20} maxFilesPerRequest={20} turnstileSiteKey="" />);
 
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
     await user.upload(input, [
@@ -21,7 +21,7 @@ describe("CompressPdfTool", () => {
 
   it("rejects non-PDF files", async () => {
     const user = userEvent.setup({ applyAccept: false });
-    render(<CompressPdfTool locale="en" />);
+    render(<CompressPdfTool locale="en" maxFileSizeMb={20} maxFilesPerRequest={20} turnstileSiteKey="" />);
 
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
     await user.upload(input, new File(["text"], "note.txt", { type: "text/plain" }));
@@ -32,7 +32,7 @@ describe("CompressPdfTool", () => {
 
   it("switches compression mode", async () => {
     const user = userEvent.setup();
-    render(<CompressPdfTool locale="en" />);
+    render(<CompressPdfTool locale="en" maxFileSizeMb={20} maxFilesPerRequest={20} turnstileSiteKey="" />);
 
     expect(screen.getByRole("radio", { name: "Balanced" })).toHaveAttribute("aria-checked", "true");
 
@@ -42,7 +42,7 @@ describe("CompressPdfTool", () => {
   });
 
   it("shows a compress action", () => {
-    render(<CompressPdfTool locale="en" />);
+    render(<CompressPdfTool locale="en" maxFileSizeMb={20} maxFilesPerRequest={20} turnstileSiteKey="" />);
 
     expect(screen.getByRole("button", { name: "Compress PDF" })).toBeInTheDocument();
   });

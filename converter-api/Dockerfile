@@ -2,10 +2,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# System deps: LibreOffice (for word-to-pdf) + fonts
+# System deps: LibreOffice (for word-to-pdf), Ghostscript (for PDF compression) + fonts
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        libreoffice-writer \
+       ghostscript \
        fonts-dejavu \
        fonts-noto \
        fontconfig \

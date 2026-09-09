@@ -9,7 +9,7 @@ describe("WorkflowBuilderTool", () => {
   });
 
   it("shows the default compress then merge workflow", () => {
-    const { container } = render(<WorkflowBuilderTool locale="en" />);
+    const { container } = render(<WorkflowBuilderTool locale="en" maxFileSizeMb={20} maxFilesPerRequest={20} turnstileSiteKey="" />);
 
     expect(screen.getByRole("heading", { name: "Compress PDF" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Merge PDF Files" })).toBeInTheDocument();
@@ -19,7 +19,7 @@ describe("WorkflowBuilderTool", () => {
 
   it("disables running and guides users when only one step remains", async () => {
     const user = userEvent.setup();
-    render(<WorkflowBuilderTool locale="en" />);
+    render(<WorkflowBuilderTool locale="en" maxFileSizeMb={20} maxFilesPerRequest={20} turnstileSiteKey="" />);
 
     await user.click(screen.getByRole("button", { name: "Remove Compress PDF" }));
 
@@ -30,7 +30,7 @@ describe("WorkflowBuilderTool", () => {
 
   it("updates inline step settings", async () => {
     const user = userEvent.setup();
-    render(<WorkflowBuilderTool locale="en" />);
+    render(<WorkflowBuilderTool locale="en" maxFileSizeMb={20} maxFilesPerRequest={20} turnstileSiteKey="" />);
 
     await user.click(screen.getByRole("radio", { name: "Smallest File" }));
     await user.click(screen.getByRole("radio", { name: "Multiple PDFs" }));
@@ -41,7 +41,7 @@ describe("WorkflowBuilderTool", () => {
 
   it("adds a removed step back into the workflow", async () => {
     const user = userEvent.setup();
-    render(<WorkflowBuilderTool locale="en" />);
+    render(<WorkflowBuilderTool locale="en" maxFileSizeMb={20} maxFilesPerRequest={20} turnstileSiteKey="" />);
 
     await user.click(screen.getByRole("button", { name: "Remove Compress PDF" }));
     await user.click(screen.getByRole("button", { name: "Add Compress PDF" }));
@@ -52,7 +52,7 @@ describe("WorkflowBuilderTool", () => {
 
   it("collapses workflow settings into step summaries", async () => {
     const user = userEvent.setup();
-    render(<WorkflowBuilderTool locale="en" />);
+    render(<WorkflowBuilderTool locale="en" maxFileSizeMb={20} maxFilesPerRequest={20} turnstileSiteKey="" />);
 
     await user.click(screen.getByRole("button", { name: "Collapse settings" }));
 

@@ -1,4 +1,4 @@
-import { compressPdfFile } from "@/features/compress-pdf/compress-engine";
+import { compressPdfFiles } from "@/features/compress-pdf/compress-engine";
 import { mergePdfFiles } from "@/features/merge-pdf/merge-engine";
 import { toMaxSizeMb } from "@/features/merge-pdf/preferences";
 import type { MergeProgress, MergeWorkerOutputFile, WorkerPdfFile } from "@/features/merge-pdf/types";
@@ -9,6 +9,7 @@ type RunWorkflowInput = {
   files: WorkerPdfFile[];
   config: WorkflowConfig;
   onProgress?: (progress: MergeProgress) => void;
+  turnstileToken?: string;
 };
 
 export async function runWorkflow(input: RunWorkflowInput): Promise<MergeWorkerOutputFile[]> {
@@ -21,11 +22,13 @@ export async function runWorkflow(input: RunWorkflowInput): Promise<MergeWorkerO
 
   for (const step of normalizeWorkflowSteps(input.config.steps)) {
     if (step.id === "compress-pdf") {
-      const compressed: MergeWorkerOutputFile[] = [];
-      for (const [index, file] of currentFiles.entries()) {
-        input.onProgress?.({ stage: "compressing", current: index + 1, total: currentFiles.length });
-        compressed.push(await compressPdfFile({ file, mode: step.settings.mode }));
-      }
+      input.onProgress?.({ stage: "compressing", current: 0, total: currentFiles.length });
+      const compressed = await compressPdfFiles({
+        files: currentFiles,
+        mode: step.settings.mode,
+        turnstileToken: input.turnstileToken
+      });
+      input.onProgress?.({ stage: "compressing", current: currentFiles.length, total: currentFiles.length });
       outputFiles = compressed;
       currentFiles = compressed.map((file) => ({
         name: file.name,

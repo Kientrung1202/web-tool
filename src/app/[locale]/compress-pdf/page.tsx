@@ -25,11 +25,16 @@ export default async function CompressPdfPage({ params }: { params: Promise<{ lo
       title={t(safeLocale, "compressTitle")}
       description={t(safeLocale, "compressDescription")}
       breadcrumbKey="compressTitle"
-      privacyLabel={t(safeLocale, "filesStayBrowser")}
+      privacyLabel={t(safeLocale, "temporaryServerProcessing")}
       aboutTitle={t(safeLocale, "compressAboutTitle")}
       aboutBody={t(safeLocale, "compressSeoBody")}
     >
-      <CompressPdfTool locale={safeLocale} />
+      <CompressPdfTool
+        locale={safeLocale}
+        maxFileSizeMb={Number.parseInt(process.env.NEXT_PUBLIC_CONVERTER_MAX_FILE_SIZE_MB ?? "20", 10)}
+        maxFilesPerRequest={Number.parseInt(process.env.NEXT_PUBLIC_CONVERTER_MAX_FILES_PER_REQUEST ?? "20", 10)}
+        turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
+      />
     </WorkbenchLayout>
   );
 }

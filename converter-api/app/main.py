@@ -12,12 +12,14 @@ import logging
 from contextlib import asynccontextmanager
 from os import path
 from pathlib import Path
+from zipfile import ZIP_STORED, ZipFile
 
 from fastapi import FastAPI, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
 from app.config import Settings, load_settings
+from app.converters.compress_pdf import compress_pdf
 from app.converters.pdf_to_word import convert_pdf_to_word, count_pdf_pages
 from app.converters.word_to_pdf import convert_word_to_pdf
 from app.security import (
@@ -128,8 +130,8 @@ async def healthz():
 
 @app.post("/api/convert/{kind}")
 async def convert(kind: str, request: Request):
-    """Handle both pdf-to-word and word-to-pdf conversions."""
-    if kind not in ("pdf-to-word", "word-to-pdf"):
+    """Handle PDF/Word conversion and PDF compression."""
+    if kind not in ("pdf-to-word", "word-to-pdf", "compress-pdf"):
         raise HTTPException(status_code=404, detail="Not found")
 
     settings = _settings
@@ -144,27 +146,43 @@ async def convert(kind: str, request: Request):
 
     # Parse multipart form
     form = await request.form()
-    uploaded_file: UploadFile | None = form.get("file")  # type: ignore[assignment]
+    uploaded_files: list[UploadFile] = [
+        item for item in form.getlist("file") if hasattr(item, "read")
+    ]  # type: ignore[list-item]
     turnstile_token: str = str(form.get("cf-turnstile-response", ""))
+    compression_mode = str(form.get("mode", "balanced"))
 
-    if uploaded_file is None or not hasattr(uploaded_file, "read"):
+    if not uploaded_files:
         raise HTTPException(status_code=400, detail="A file is required")
 
+    if kind != "compress-pdf" and len(uploaded_files) != 1:
+        raise HTTPException(status_code=400, detail="Exactly one file is required")
+    if kind == "compress-pdf" and len(uploaded_files) > settings.max_files_per_request:
+        raise HTTPException(status_code=413, detail="Too many files")
+    if kind == "compress-pdf" and compression_mode not in ("balanced", "smallest"):
+        raise HTTPException(status_code=422, detail="Unsupported compression mode")
+
     # Read file content
-    file_bytes = await uploaded_file.read()
-    file_name = uploaded_file.filename or "upload"
-    file_ext = path.splitext(file_name)[1]
+    uploads: list[tuple[str, bytes]] = []
+    for uploaded_file in uploaded_files:
+        file_bytes = await uploaded_file.read()
+        file_name = uploaded_file.filename or "upload"
+        uploads.append((file_name, file_bytes))
+
+    if kind == "compress-pdf" and sum(len(file_bytes) for _, file_bytes in uploads) > settings.max_file_size_bytes:
+        raise HTTPException(status_code=413, detail="Compression batch is too large")
 
     # Validate turnstile
     await validate_turnstile_token(turnstile_token, remote_ip, settings)
 
-    # Validate upload
-    assert_upload_allowed(
-        file_size=len(file_bytes),
-        file_extension=file_ext,
-        kind=kind,
-        settings=settings,
-    )
+    # Validate uploads
+    for file_name, file_bytes in uploads:
+        assert_upload_allowed(
+            file_size=len(file_bytes),
+            file_extension=path.splitext(file_name)[1],
+            kind=kind,
+            settings=settings,
+        )
 
     # Run conversion inside job limiter
     assert _job_limiter is not None
@@ -172,10 +190,10 @@ async def convert(kind: str, request: Request):
 
     async def do_convert():
         try:
-            input_path = job.input_path(file_name)
-            input_path.write_bytes(file_bytes)
-
             if kind == "pdf-to-word":
+                file_name, file_bytes = uploads[0]
+                input_path = job.input_path(file_name)
+                input_path.write_bytes(file_bytes)
                 pages = count_pdf_pages(file_bytes)
                 if pages > settings.max_pdf_pages:
                     raise HTTPException(status_code=413, detail="PDF has too many pages")
@@ -189,13 +207,52 @@ async def convert(kind: str, request: Request):
                     input_path=input_path,
                     output_path=output_path,
                 )
-            else:
+            elif kind == "word-to-pdf":
+                file_name, file_bytes = uploads[0]
+                input_path = job.input_path(file_name)
+                input_path.write_bytes(file_bytes)
                 result = await convert_word_to_pdf(
                     input_path=input_path,
                     output_dir=job.output_dir,
                     profile_dir=job.profile_dir,
                     timeout_seconds=settings.timeout_seconds,
                 )
+            else:
+                results = []
+                deadline = asyncio.get_running_loop().time() + settings.timeout_seconds
+                for index, (file_name, file_bytes) in enumerate(uploads):
+                    input_path = job.input_path(f"{index}-{file_name}")
+                    input_path.write_bytes(file_bytes)
+                    output_path = job.output_dir / f"{index}-{Path(file_name).stem}-compressed.pdf"
+                    remaining_seconds = int(deadline - asyncio.get_running_loop().time())
+                    if remaining_seconds <= 0:
+                        raise HTTPException(status_code=504, detail="Compression timed out")
+                    results.append(
+                        await compress_pdf(
+                            input_path=input_path,
+                            output_path=output_path,
+                            original_file_name=file_name,
+                            mode=compression_mode,
+                            timeout_seconds=remaining_seconds,
+                        )
+                    )
+
+                if len(results) == 1:
+                    result = results[0]
+                else:
+                    archive_path = job.output_dir / "compressed-pdfs.zip"
+                    used_names: set[str] = set()
+                    with ZipFile(archive_path, "w", compression=ZIP_STORED) as archive:
+                        for item in results:
+                            archive_name = _unique_archive_name(item.file_name, used_names)
+                            archive.write(item.output_path, arcname=archive_name)
+                    return FileResponse(
+                        path=str(archive_path),
+                        filename="compressed-pdfs.zip",
+                        media_type="application/zip",
+                        headers={"Cache-Control": "no-store"},
+                        background=_cleanup_task(job),
+                    )
 
             return FileResponse(
                 path=str(result.output_path),
@@ -213,6 +270,18 @@ async def convert(kind: str, request: Request):
             raise HTTPException(status_code=500, detail="Conversion failed")
 
     return await _job_limiter.run(do_convert())
+
+
+def _unique_archive_name(file_name: str, used_names: set[str]) -> str:
+    candidate = file_name
+    stem = Path(file_name).stem
+    suffix = Path(file_name).suffix
+    index = 2
+    while candidate in used_names:
+        candidate = f"{stem}-{index}{suffix}"
+        index += 1
+    used_names.add(candidate)
+    return candidate
 
 
 class _cleanup_task:

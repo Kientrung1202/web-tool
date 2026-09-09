@@ -25,11 +25,16 @@ export default async function WorkflowBuilderPage({ params }: { params: Promise<
       title={t(safeLocale, "workflowTitle")}
       description={t(safeLocale, "workflowDescription")}
       breadcrumbKey="workflowTitle"
-      privacyLabel={t(safeLocale, "filesStayBrowser")}
+      privacyLabel={t(safeLocale, "workflowServerProcessing")}
       aboutTitle={t(safeLocale, "workflowAboutTitle")}
       aboutBody={t(safeLocale, "workflowSeoBody")}
     >
-      <WorkflowBuilderTool locale={safeLocale} />
+      <WorkflowBuilderTool
+        locale={safeLocale}
+        maxFileSizeMb={Number.parseInt(process.env.NEXT_PUBLIC_CONVERTER_MAX_FILE_SIZE_MB ?? "20", 10)}
+        maxFilesPerRequest={Number.parseInt(process.env.NEXT_PUBLIC_CONVERTER_MAX_FILES_PER_REQUEST ?? "20", 10)}
+        turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
+      />
     </WorkbenchLayout>
   );
 }

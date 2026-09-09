@@ -1,8 +1,18 @@
 import { PDFDocument } from "pdf-lib";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createPdfBytes } from "@/test/pdf-fixtures";
 import { DEFAULT_WORKFLOW_CONFIG } from "./preferences";
 import { runWorkflow } from "./workflow-engine";
+
+vi.mock("@/features/compress-pdf/compress-engine", () => ({
+  compressPdfFiles: vi.fn(async ({ files }: { files: Array<{ name: string; bytes: ArrayBuffer }> }) =>
+    files.map((file) => ({
+      name: file.name.replace(/\.pdf$/i, "-compressed.pdf"),
+      mimeType: "application/pdf",
+      bytes: file.bytes
+    }))
+  )
+}));
 
 describe("runWorkflow", () => {
   it("runs the default workflow and returns one merged PDF", async () => {

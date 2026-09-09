@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Script from "next/script";
 import { CaretDown, CaretUp, DownloadSimple, GitBranch, Plus, ShieldCheck, Trash } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CompressSettings } from "@/features/compress-pdf/CompressSettings";
+import { CompressPdfApiError } from "@/features/compress-pdf/compress-engine";
 import { DEFAULT_COMPRESS_PREFERENCES } from "@/features/compress-pdf/preferences";
 import { FileDropzone } from "@/features/merge-pdf/FileDropzone";
 import { FileList } from "@/features/merge-pdf/FileList";
@@ -29,7 +31,15 @@ const INITIAL_PROGRESS: MergeProgress = {
   total: 0
 };
 
-export function WorkflowBuilderTool({ locale }: { locale: Locale }) {
+type Props = {
+  locale: Locale;
+  maxFileSizeMb: number;
+  maxFilesPerRequest: number;
+  turnstileSiteKey: string;
+};
+
+export function WorkflowBuilderTool({ locale, maxFileSizeMb, maxFilesPerRequest, turnstileSiteKey }: Props) {
+  const turnstileRef = useRef<HTMLDivElement>(null);
   const [files, setFiles] = useState<PdfFileItem[]>([]);
   const [config, setConfig] = useState<WorkflowConfig>(DEFAULT_WORKFLOW_CONFIG);
   const [progress, setProgress] = useState<MergeProgress>(INITIAL_PROGRESS);
@@ -142,8 +152,14 @@ export function WorkflowBuilderTool({ locale }: { locale: Locale }) {
       return;
     }
 
-    if (limitLevel === "hard") {
-      setError(t(locale, "tooManyFiles"));
+    if (limitLevel === "hard" || files.length > maxFilesPerRequest || totalBytes > maxFileSizeMb * 1024 * 1024) {
+      setError(t(locale, "convertLimitError"));
+      return;
+    }
+
+    const turnstileToken = getTurnstileToken(turnstileRef.current);
+    if (turnstileSiteKey && !turnstileToken) {
+      setError(t(locale, "convertVerificationRequired"));
       return;
     }
 
@@ -168,7 +184,8 @@ export function WorkflowBuilderTool({ locale }: { locale: Locale }) {
       const result = await runWorkflow({
         files: workerFiles,
         config,
-        onProgress: setProgress
+        onProgress: setProgress,
+        turnstileToken
       });
 
       setDownloads(
@@ -178,16 +195,18 @@ export function WorkflowBuilderTool({ locale }: { locale: Locale }) {
         }))
       );
       setProgress({ stage: "done", current: 1, total: 1 });
-    } catch {
-      setError(t(locale, "processingFailed"));
+    } catch (caught) {
+      setError(caught instanceof CompressPdfApiError ? compressErrorMessage(caught.status, locale) : t(locale, "processingFailed"));
       setProgress({ stage: "error", current: 0, total: 0 });
     } finally {
+      resetTurnstile();
       setIsProcessing(false);
     }
   }
 
   return (
     <section className="grid gap-4 rounded-lg border bg-card/70 p-3 shadow-product lg:grid-cols-[minmax(0,3fr)_minmax(20rem,2fr)] lg:p-4">
+      {turnstileSiteKey ? <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" /> : null}
       <div className="grid gap-4">
         <FileDropzone locale={locale} onFiles={addFiles} />
         <FileList locale={locale} files={files} onMove={moveFile} onRemove={removeFile} />
@@ -196,7 +215,7 @@ export function WorkflowBuilderTool({ locale }: { locale: Locale }) {
       <aside className="grid content-start gap-4">
         <div className="flex min-h-10 items-center gap-2 rounded-md border bg-primary/10 px-3 text-sm font-semibold text-accent-foreground">
           <ShieldCheck size={20} weight="duotone" />
-          <span>{t(locale, "privateByDesign")}</span>
+          <span>{t(locale, "workflowServerProcessing")}</span>
         </div>
         <WorkflowPanel
           locale={locale}
@@ -208,11 +227,18 @@ export function WorkflowBuilderTool({ locale }: { locale: Locale }) {
           onUpdate={updateStep}
         />
         {!isValidWorkflow ? <InvalidWorkflowGuidance locale={locale} steps={normalizedSteps} /> : null}
+        {turnstileSiteKey ? <div ref={turnstileRef} className="cf-turnstile" data-sitekey={turnstileSiteKey} /> : null}
         <ProgressPanel locale={locale} error={error} limitLevel={limitLevel} progress={progress} totalSize={formatBytes(totalBytes)} />
         <div className="grid gap-2">
           <button
             className="inline-flex h-11 w-full items-center justify-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isProcessing || limitLevel === "hard" || !isValidWorkflow}
+            disabled={
+              isProcessing ||
+              limitLevel === "hard" ||
+              !isValidWorkflow ||
+              files.length > maxFilesPerRequest ||
+              totalBytes > maxFileSizeMb * 1024 * 1024
+            }
             type="button"
             onClick={runConfiguredWorkflow}
           >
@@ -242,6 +268,23 @@ export function WorkflowBuilderTool({ locale }: { locale: Locale }) {
       </aside>
     </section>
   );
+}
+
+function getTurnstileToken(container: HTMLDivElement | null): string {
+  return container?.querySelector<HTMLInputElement>('input[name="cf-turnstile-response"]')?.value ?? "";
+}
+
+function resetTurnstile() {
+  const turnstile = (window as Window & { turnstile?: { reset: () => void } }).turnstile;
+  turnstile?.reset();
+}
+
+function compressErrorMessage(status: number, locale: Locale): string {
+  if (status === 413) return t(locale, "convertLimitError");
+  if (status === 429) return t(locale, "convertRateLimited");
+  if (status === 504) return t(locale, "convertTimedOut");
+  if (status === 400 || status === 403) return t(locale, "convertVerificationFailed");
+  return t(locale, "processingFailed");
 }
 
 function WorkflowPanel({

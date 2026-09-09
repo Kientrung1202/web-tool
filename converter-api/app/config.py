@@ -34,7 +34,7 @@ class Settings:
 
     # File / conversion limits
     max_file_size_bytes: int = 20 * MB
-    max_files_per_request: int = 1
+    max_files_per_request: int = 20
     max_pdf_pages: int = 80
     timeout_seconds: int = 120
 
@@ -77,7 +77,7 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
     return Settings(
         node_env=node_env,
         max_file_size_bytes=_int(env.get("CONVERTER_MAX_FILE_SIZE_MB"), 20, 1) * MB,
-        max_files_per_request=_int(env.get("CONVERTER_MAX_FILES_PER_REQUEST"), 1, 1),
+        max_files_per_request=_int(env.get("CONVERTER_MAX_FILES_PER_REQUEST"), 20, 1),
         max_pdf_pages=_int(env.get("CONVERTER_MAX_PDF_PAGES"), 80, 1),
         timeout_seconds=_int(env.get("CONVERTER_TIMEOUT_SECONDS"), 120, 5),
         max_concurrent_jobs=_int(env.get("CONVERTER_MAX_CONCURRENT_JOBS"), 2, 1),

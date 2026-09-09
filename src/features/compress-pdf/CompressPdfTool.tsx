@@ -1,7 +1,8 @@
 "use client";
 
+import Script from "next/script";
 import { DownloadSimple, ShieldCheck, Trash } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Locale } from "@/i18n/locales";
 import { t } from "@/i18n/dictionaries";
 import { formatBytes } from "@/lib/format";
@@ -10,7 +11,7 @@ import { FileDropzone } from "@/features/merge-pdf/FileDropzone";
 import { FileList } from "@/features/merge-pdf/FileList";
 import { ProgressPanel } from "@/features/merge-pdf/ProgressPanel";
 import type { MergeProgress, MergeWorkerOutputFile, PdfFileItem } from "@/features/merge-pdf/types";
-import { compressPdfFile } from "./compress-engine";
+import { CompressPdfApiError, compressPdfFiles } from "./compress-engine";
 import { CompressSettings } from "./CompressSettings";
 import { DEFAULT_COMPRESS_PREFERENCES, loadCompressPreferences, saveCompressPreferences } from "./preferences";
 import type { CompressPreferences } from "./types";
@@ -25,7 +26,15 @@ const INITIAL_PROGRESS: MergeProgress = {
   total: 0
 };
 
-export function CompressPdfTool({ locale }: { locale: Locale }) {
+type Props = {
+  locale: Locale;
+  maxFileSizeMb: number;
+  maxFilesPerRequest: number;
+  turnstileSiteKey: string;
+};
+
+export function CompressPdfTool({ locale, maxFileSizeMb, maxFilesPerRequest, turnstileSiteKey }: Props) {
+  const turnstileRef = useRef<HTMLDivElement>(null);
   const [files, setFiles] = useState<PdfFileItem[]>([]);
   const [preferences, setPreferences] = useState<CompressPreferences>(DEFAULT_COMPRESS_PREFERENCES);
   const [progress, setProgress] = useState<MergeProgress>(INITIAL_PROGRESS);
@@ -104,8 +113,14 @@ export function CompressPdfTool({ locale }: { locale: Locale }) {
       return;
     }
 
-    if (limitLevel === "hard") {
-      setError(t(locale, "tooManyFiles"));
+    if (limitLevel === "hard" || files.length > maxFilesPerRequest || totalBytes > maxFileSizeMb * 1024 * 1024) {
+      setError(t(locale, "convertLimitError"));
+      return;
+    }
+
+    const turnstileToken = getTurnstileToken(turnstileRef.current);
+    if (turnstileSiteKey && !turnstileToken) {
+      setError(t(locale, "convertVerificationRequired"));
       return;
     }
 
@@ -127,11 +142,13 @@ export function CompressPdfTool({ locale }: { locale: Locale }) {
         setProgress({ stage: "reading", current: index + 1, total: files.length });
       }
 
-      const result: MergeWorkerOutputFile[] = [];
-      for (const [index, file] of workerFiles.entries()) {
-        setProgress({ stage: "building", current: index + 1, total: workerFiles.length });
-        result.push(await compressPdfFile({ file, mode: preferences.mode }));
-      }
+      setProgress({ stage: "compressing", current: 0, total: workerFiles.length });
+      const result = await compressPdfFiles({
+        files: workerFiles,
+        mode: preferences.mode,
+        turnstileToken
+      });
+      setProgress({ stage: "compressing", current: workerFiles.length, total: workerFiles.length });
 
       setDownloads(
         result.map((file) => ({
@@ -140,16 +157,18 @@ export function CompressPdfTool({ locale }: { locale: Locale }) {
         }))
       );
       setProgress({ stage: "done", current: 1, total: 1 });
-    } catch {
-      setError(t(locale, "processingFailed"));
+    } catch (caught) {
+      setError(caught instanceof CompressPdfApiError ? compressErrorMessage(caught.status, locale) : t(locale, "processingFailed"));
       setProgress({ stage: "error", current: 0, total: 0 });
     } finally {
+      resetTurnstile();
       setIsProcessing(false);
     }
   }
 
   return (
     <section className="grid gap-4 rounded-lg border bg-card/70 p-3 shadow-product lg:grid-cols-[minmax(0,1fr)_22rem] lg:p-4">
+      {turnstileSiteKey ? <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" /> : null}
       <div className="grid gap-4">
         <FileDropzone locale={locale} onFiles={addFiles} />
         <FileList locale={locale} files={files} onMove={moveFile} onRemove={removeFile} />
@@ -158,14 +177,20 @@ export function CompressPdfTool({ locale }: { locale: Locale }) {
       <aside className="grid content-start gap-4">
         <div className="flex min-h-10 items-center gap-2 rounded-md border bg-primary/10 px-3 text-sm font-semibold text-accent-foreground">
           <ShieldCheck size={20} weight="duotone" />
-          <span>{t(locale, "privateByDesign")}</span>
+          <span>{t(locale, "temporaryServerProcessing")}</span>
         </div>
         <CompressSettings locale={locale} preferences={preferences} onChange={setPreferences} />
+        {turnstileSiteKey ? <div ref={turnstileRef} className="cf-turnstile" data-sitekey={turnstileSiteKey} /> : null}
         <ProgressPanel locale={locale} error={error} limitLevel={limitLevel} progress={progress} totalSize={formatBytes(totalBytes)} />
         <div className="grid gap-2">
           <button
             className="inline-flex h-11 w-full items-center justify-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:translate-y-px"
-            disabled={isProcessing || limitLevel === "hard"}
+            disabled={
+              isProcessing ||
+              limitLevel === "hard" ||
+              files.length > maxFilesPerRequest ||
+              totalBytes > maxFileSizeMb * 1024 * 1024
+            }
             type="button"
             onClick={compressFiles}
           >
@@ -195,6 +220,23 @@ export function CompressPdfTool({ locale }: { locale: Locale }) {
       </aside>
     </section>
   );
+}
+
+function getTurnstileToken(container: HTMLDivElement | null): string {
+  return container?.querySelector<HTMLInputElement>('input[name="cf-turnstile-response"]')?.value ?? "";
+}
+
+function resetTurnstile() {
+  const turnstile = (window as Window & { turnstile?: { reset: () => void } }).turnstile;
+  turnstile?.reset();
+}
+
+function compressErrorMessage(status: number, locale: Locale): string {
+  if (status === 413) return t(locale, "convertLimitError");
+  if (status === 429) return t(locale, "convertRateLimited");
+  if (status === 504) return t(locale, "convertTimedOut");
+  if (status === 400 || status === 403) return t(locale, "convertVerificationFailed");
+  return t(locale, "processingFailed");
 }
 
 function isPdfFile(file: File): boolean {

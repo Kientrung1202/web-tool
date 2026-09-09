@@ -13,8 +13,8 @@ describe("converter deployment wiring", () => {
   });
 
   it("allows converter-api outbound egress for Turnstile verification", () => {
-    expect(compose).toMatch(/converter-api:[\s\S]*networks:\n\s+- internal\n\s+- converter-egress/);
-    expect(compose).toMatch(/converter-egress:\n(?!\s+internal: true)/);
+    expect(compose).toMatch(/converter-api:[\s\S]*networks:\r?\n\s+- internal\r?\n\s+- converter-egress/);
+    expect(compose).toMatch(/converter-egress:\r?\n(?!\s+internal: true)/);
   });
 
   it("proxies conversion requests through Nginx with an internal token", () => {
